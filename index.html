@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Document Vectorizer</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 40px; background-color: #f4f4f9; }
+        .card { max-width: 400px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin: auto;}
+        input { display: block; width: 90%; margin-bottom: 15px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        button { background: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; width: 100%;}
+        button:hover { background: #0056b3; }
+        #status { margin-top: 15px; font-weight: bold; text-align: center; color: #333;}
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Upload Knowledge Base</h2>
+    
+    <label for="wordFile">Select Word Document:</label>
+    <!-- Updated to only accept .docx -->
+    <input type="file" id="wordFile" accept=".docx" required>
+
+    <label for="namespace">Namespace Key (e.g., hr-manual):</label>
+    <input type="text" id="namespace" placeholder="Enter namespace key..." required>
+
+    <button onclick="uploadDocument()" id="uploadBtn">Vectorize & Store</button>
+    
+    <div id="status"></div>
+</div>
+
+<script>
+    async function uploadDocument() {
+        // Updated IDs to match
+        const fileInput = document.getElementById('wordFile');
+        const namespaceInput = document.getElementById('namespace').value;
+        const statusDiv = document.getElementById('status');
+        const btn = document.getElementById('uploadBtn');
+
+        if (!fileInput.files[0] || !namespaceInput) {
+            alert("Please select a file and enter a namespace.");
+            return;
+        }
+
+        // Prepare the data to send
+        const formData = new FormData();
+        // THIS IS THE MAGIC FIX: "wordFile" matches upload.single("wordFile") in server.js
+        formData.append("wordFile", fileInput.files[0]);
+        formData.append("namespace", namespaceInput);
+
+        // Update UI
+        statusDiv.innerText = "⏳ Uploading and processing... Please wait.";
+        btn.disabled = true;
+
+        try {
+            // Send to our Node.js server
+            const response = await fetch("http://localhost:3000/api/upload", {
+                method: "POST",
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                statusDiv.innerText = "✅ " + result.message;
+                statusDiv.style.color = "green";
+            } else {
+                statusDiv.innerText = "❌ Error: " + result.error;
+                statusDiv.style.color = "red";
+            }
+        } catch (error) {
+            statusDiv.innerText = "❌ Server connection failed!";
+            statusDiv.style.color = "red";
+        }
+
+        btn.disabled = false;
+    }
+</script>
+
+</body>
+</html>
