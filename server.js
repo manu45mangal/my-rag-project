@@ -26,6 +26,9 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 // 1. Get a list of all active namespaces
 app.get('/api/namespaces', async (req, res) => {
     try {
+
+          const pinecone = new Pinecone({ apiKey: process.env.PINECONE_API_KEY });
+    const pineconeIndex = pinecone.Index("my-pdf-index"); 
         // describeIndexStats() returns metadata about your Pinecone index, including namespaces
         const stats = await pineconeIndex.describeIndexStats();
         
@@ -42,6 +45,8 @@ app.get('/api/namespaces', async (req, res) => {
 // 2. Delete an entire namespace
 app.delete('/api/namespaces/:namespace', async (req, res) => {
     try {
+          const pinecone = new Pinecone({ apiKey: process.env.PINECONE_API_KEY });
+    const pineconeIndex = pinecone.Index("my-pdf-index"); 
         const targetNamespace = req.params.namespace;
         
         // Tell Pinecone to delete everything inside this specific namespace
