@@ -23,6 +23,37 @@ app.use(express.json());
 const upload = multer({ dest: "uploads/" });
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+// 1. Get a list of all active namespaces
+app.get('/api/namespaces', async (req, res) => {
+    try {
+        // describeIndexStats() returns metadata about your Pinecone index, including namespaces
+        const stats = await pineconeIndex.describeIndexStats();
+        
+        // Extract just the names into an array
+        const activeNamespaces = Object.keys(stats.namespaces || {});
+        
+        res.status(200).json({ namespaces: activeNamespaces });
+    } catch (error) {
+        console.error("Error fetching namespaces:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 2. Delete an entire namespace
+app.delete('/api/namespaces/:namespace', async (req, res) => {
+    try {
+        const targetNamespace = req.params.namespace;
+        
+        // Tell Pinecone to delete everything inside this specific namespace
+        await pineconeIndex.namespace(targetNamespace).deleteAll();
+        
+        res.status(200).json({ message: `Namespace "${targetNamespace}" successfully deleted.` });
+    } catch (error) {
+        console.error("Error deleting namespace:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // ==========================================
 // ROUTE 1: UPLOAD & VECTORIZE (WORD DOCX)
 // ==========================================
